@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Create a div where the graph will take place -->
+<div id="dataviz"></div>
+
+    <body>
+
+	<table id="target1", style="float:left"></table>
+	<table id="target2", style="float:left"></table>
+	<table id="target3", style="float:left"></table>
+
+        <script src="http://d3js.org/d3.v4.js"></script>
+		<script>
+			var width = 1800,
+				height = 600,
+				margin = 100; 
+
+			var radius = 200;
+		
+			var svg = d3.select("#dataviz")
+				.append("svg")
+				.attr("width", width)
+				.attr("height", height)
+				.append("g")
+				.attr("transform", "translate(" + width / 4 + "," + height / 2 + ")")
+
+			// table function
+			function tabulate(dict, header, id) {
+				var table = d3.select("#" + id)
+				.attr("style", "margin-left: 150px")
+				// .append("table")
+				thead = table.append("thead")
+				
+				// append the header row
+				thead.append("tr")
+					.selectAll("th")
+					.data(header)
+					.enter()
+					.append("th")
+					.text(function(column) { return column; })
+
+				for (var j = 0; j < Object.keys(dict).length; j++) {
+					key = Object.keys(dict)[j]
+					document.getElementById(id).innerHTML += "<tr><td>" + key + "</td><td>" + dict[key] + "</td></tr>"
+				}
+			}
+			
+            d3.csv("https://github.com/plotly/datasets/blob/master/auto-mpg.csv", function(data) {
+				// calculate number of cars in each year
+				var year_count = {}
+				for (var i = 0; i < data.length; i++) {
+					if (data[i]["model-year"] in year_count) {
+						year_count[data[i]["model-year"]] += 1
+					} else {
+						year_count[data[i]["model-year"]] = 1
+					}
+				}
+				
+				// calculate total cylinders in each year
+				var cylinder = {}
+				for (var i = 0; i < data.length; i++) {
+					if (data[i]["model-year"] in cylinder) {
+						cylinder[data[i]["model-year"]] += +data[i]["cylinders"]
+					} else {
+						cylinder[data[i]["model-year"]] = +data[i]["cylinders"]
+					}
+				}
+				
+				// calculate number of cars for each acceleration
+				var acceleration = {}
+				for (var i = 0; i < data.length; i++) {
+					if (data[i]["acceleration"] in acceleration) {
+						acceleration[data[i]["acceleration"]] += 1
+					} else {
+						acceleration[data[i]["acceleration"]] = 1
+					}
+				}
+				
+				// display tables
+				tabulate(year_count, ["model-year", "count"], "target1")
+				tabulate(cylinder, ["model-year", "total cylinders"], "target2")
+				tabulate(acceleration, ["acceleration", "count"], "target3")
+				
+				var sum = Object.values(year_count).reduce((a, b) => a + b, 0)
+
+				// A color scale: one color for each group
+				var myColor = d3.scaleOrdinal()
+					.domain(year_count)
+					.range(d3.schemeCategory10); 
+				
+				var percentageFormat = d3.format(".2%");
+
+				var pie = d3.pie()
+					.value(function(d) { return d.value; })
+				var data_ready = pie(d3.entries(year_count))
+
+				var arcGenerator = d3.arc()
+					.innerRadius(0)
+					.outerRadius(radius)
+
+				var arc = d3.arc()
+					.outerRadius(radius + 80)
+					.innerRadius(60)
+				
+				svg.selectAll('mySlices')
+				.data(data_ready)
+				.enter()
+				.append('path')
+					.attr('d', arcGenerator)
+					.attr('fill', d => myColor(d.data.key))
+					.attr("stroke", "black")
+					.style("stroke-width", "2px")
+					.style("opacity", 0.7)
+				
+				svg.selectAll('mySlices')
+					.data(data_ready)
+					.enter()
+					.append('text')
+					.text(function(d) { return d.data.key })
+					.attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")" })
+					.style("text-anchor", "middle")
+					.style("font-size", 16)
+					.attr("font-weight", 900)
+
+				svg.selectAll('mySlices')
+					.data(data_ready)
+					.enter()
+					.append("text")
+					.attr("transform", function(d) {
+						return "translate(" + arc.centroid(d) + ")";
+					})
+					.attr("dy", ".35em")
+					.style("text-anchor", "middle")
+					.text(function(d) {
+						return percentageFormat(d.data.value / sum);
+					});
+
+				svg.append("text")
+					.attr("x", 0)             
+					.attr("y", -margin - 140)
+					.attr("text-anchor", "middle")  
+					.style("font-size", "20px") 
+					.text("Model Year Distribution");
+
+				
+				var xmin = d3.min(Object.keys(acceleration), d => parseFloat(d))
+					xmax = d3.max(Object.keys(acceleration), d => parseFloat(d))
+
+				var x = d3.scaleLinear()
+					.domain([xmin, xmax])
+					.range([250, 600]);
+				svg.append("g")
+					.attr("transform", "translate(0, " + 200 + ")")
+					.call(d3.axisBottom(x));
+
+				var histogram = d3.histogram()
+					.value(function(d) { return d.acceleration; })
+					.domain(x.domain())  
+					.thresholds(x.ticks(10)); 
+				
+				var bins = histogram(data)
+
+				var y = d3.scaleLinear()
+                .domain([0, d3.max(bins, function(d) { return d.length; })])
+                .range([height/3, -100])
+				svg.append("g")
+					.attr("transform", "translate(" + 250 + ")")
+					.call(d3.axisLeft(y));
+
+				svg.selectAll("rect")
+					.data(bins)
+					.enter()
+					.append("rect")
+					.attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+					.attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
+					.attr("height", function(d) { return (height/3 - y(d.length)); })
+					.style("fill", "skyblue")
+
+				svg.append("text")
+					.attr("x", 400)             
+					.attr("y", -120)
+					.attr("text-anchor", "middle")  
+					.style("font-size", "16px") 
+					.style("font-weight", 600)
+					.text("Acceleration Histogram");
+
+				svg.append("text")
+					.attr("x", 420)
+					.attr("y", 230)
+					.style("text-anchor", "middle")
+					.style("font-size", "16px") 
+					.text("Acceleration");
+                
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -30)
+					.attr("y", 220)
+					.style("text-anchor", "middle")
+					.style("font-size", "16px") 
+					.text("Count");
+				
+				
+				var x_line = d3.scaleLinear()
+					.domain([
+						d3.max(Object.keys(cylinder), d => parseFloat(d)), 
+						d3.min(Object.keys(cylinder), d => parseFloat(d))])
+					.range([650, 1000]);
+					svg.append("g")
+					.attr("transform", "translate(0 " + 200 + ")")
+					.call(d3.axisBottom(x_line));
+	
+				var y_line = d3.scaleLinear()
+				    .domain([
+						d3.min(Object.values(cylinder), d => d), 
+						d3.max(Object.values(cylinder), d => d)])
+				    .range([height/3, -100]);
+	
+				svg.append("g")
+					.attr("transform", "translate(" + 650 + ")")
+				    .call(d3.axisLeft(y_line));
+
+				console.log(Object.keys(cylinder))
+
+				svg.append("path")
+					.datum(d3.entries(cylinder))
+					.attr("fill", "null")
+					.attr("stroke", "skyblue")
+					.attr("stroke-width", 1.5)
+					.attr("d", d3.area()
+					.x(d => x_line(d.key))
+					.y(d => y_line(d.value)))	 
+			
+				
+				svg.append("text")
+					.attr("x", 820)             
+					.attr("y", -120)
+					.attr("text-anchor", "middle")  
+					.style("font-size", "16px") 
+					.style("font-weight", 600)
+					.text("Cylinder Line Graph");
+
+				svg.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -30)
+					.attr("y", 620)
+					.style("text-anchor", "middle")
+					.style("font-size", "16px") 
+					.text("Cylinder Count");
+
+				svg.append("text")
+					.attr("x", 820)
+					.attr("y", 230)
+					.style("text-anchor", "middle")
+					.style("font-size", "16px") 
+					.text("Model Year");
+
+
+
+
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<!-- Load d3.js you can use ither version if you want -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<style>
+	.links line {
+		stroke: #999;
+		stroke-opacity: 0.6;
+	}
+	
+	.nodes circle {
+		stroke: #fff;
+		stroke-width: 1.5px;
+	}
+	
+	text {
+		font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+		font-size: 10px;
+	}
+	</style>
+
+
+<svg width="1000" height="800"></svg>
+
+
+<script>
+	var svg = d3.select("svg"),
+		width = +svg.attr("width"),
+		height = +svg.attr("height")
+	
+	var simulation = d3.forceSimulation()
+		.force("link", d3.forceLink().id(function(d) { return d.id; }))
+		.force("charge", d3.forceManyBody())
+		.force("center", d3.forceCenter(width / 2, height / 2));
+
+	var color = d3.scaleOrdinal(d3.schemeCategory20)
+
+	// var fisheye = d3.fisheye.circular()
+	// 	.radius(200)
+	// 	.distortion(2)
+
+	d3.csv("https://gist.githubusercontent.com/timelyportfolio/5049980/raw/66a239b4aa325c05c7a19bd96bf093632591e809/les_mis.csv", 
+	function(data) {
+
+		let graph = {"nodes": [], "links": []}
+		
+		// data preprocessing
+		data.forEach(function(line) { 
+			column = Object.entries(line)
+			graph.nodes.push({
+				'id': column[0][1],
+				'group': column[3][1]
+			})
+			graph.nodes.push({
+				'id': column[1][1],
+				'group': column[4][1]
+			})
+			graph.links.push({
+				'source': column[0][1],
+				'target': column[1][1],
+				'value': column[2][1]
+			})
+		})
+
+		var link = svg.append("g")
+			.attr("class", "links")
+			.selectAll("line")
+			.data(graph.links)
+			.enter()
+			.append("line")
+			.attr("stroke-width", d => Math.sqrt(d.value))
+
+		var node = svg.append("g")
+			.attr("class", "nodes")
+			.selectAll("g")
+			.data(graph.nodes)
+			.enter().append("g")
+
+		var circles = node.append("circle")
+			.attr("r", 5)
+			.attr("fill", function(d) { return color(d.group); });
+
+		// Create a drag handler and append it to the node object instead
+		var drag_handler = d3.drag()
+			.on("start", dragstarted)
+			.on("drag", dragged)
+			.on("end", dragended);
+
+		drag_handler(node);
+  
+		var lables = node.append("text")
+			.text(function(d) {
+				return d.id;
+			})
+			.attr('x', 6)
+			.attr('y', 3);
+
+		node.append("title")
+			.text(function(d) { return d.id; });
+
+		simulation
+			.nodes(graph.nodes)
+			.on("tick", ticked)
+
+		simulation.force("link").links(graph.links)
+
+		function ticked() {
+			link
+				.attr("x1", d => d.source.x)
+				.attr("y1", d => d.source.y)
+				.attr("x2", d => d.target.x)
+				.attr("y2", d => d.target.y)
+			
+			node
+				.attr("transform", function(d) {
+					return "translate(" + d.x + "," + d.y + ")";
+				})
+		}
+		
+		function dragstarted(d) {
+			if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+			d.fx = d.x;
+			d.fy = d.y;
+		}
+
+		function dragged(d) {
+			d.fx = d3.event.x;
+			d.fy = d3.event.y;
+		}
+
+		function dragended(d) {
+			if (!d3.event.active) simulation.alphaTarget(0);
+			d.fx = null;
+			d.fy = null;
+		}
+
+		// svg.on("mousemove", function() {
+		// 	fisheye.focus(d3.mouse(this));
+
+		// 	node.each(function(d) { d.fisheye = fisheye(d); })
+		// 		.attr("cx", function(d) { return d.fisheye.x; })
+		// 		.attr("cy", function(d) { return d.fisheye.y; })
+		// 		.attr("r", function(d) { return d.fisheye.z * 4.5; });
+
+		// 	link.attr("x1", function(d) { return d.source.fisheye.x; })
+		// 		.attr("y1", function(d) { return d.source.fisheye.y; })
+		// 		.attr("x2", function(d) { return d.target.fisheye.x; })
+		// 		.attr("y2", function(d) { return d.target.fisheye.y; });
+		// });
+
+
+    });
+</script>

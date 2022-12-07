@@ -1,0 +1,17 @@
+<script src="https://d3js.org/d3.v4.js"></script>
+<body>
+    
+    <p> Wind speed mostly is within 2-3 mph and the distribution is right-skewed </p>
+    
+    <p> Sunny days and rainy days account for almost 90% of possibilities and the city seldom snows </p>
+
+    <p> As for the precipitation, Seattle has low precipitation in the summer and a lot in the winter, especially after October </p>
+    
+    <script>
+        d3.selectAll("p")
+            .data([12, 16, 20])
+            .style("font-size", function (d) { return d + "px"; })
+            .style("color", "blue")
+    </script>
+
+</body>

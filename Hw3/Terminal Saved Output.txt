@@ -1,0 +1,56 @@
+Last login: Thu Nov 10 11:24:04 on console
+Yi~ >> xcode-select --install
+xcode-select: error: command line tools are already installed, use "Software Update" in System Settings to install updates
+Yi~ >> /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+==> Checking for `sudo` access (which may request your password)...
+Password:
+==> This script will install:
+/usr/local/bin/brew
+/usr/local/share/doc/homebrew
+/usr/local/share/man/man1/brew.1
+/usr/local/share/zsh/site-functions/_brew
+/usr/local/etc/bash_completion.d/brew
+/usr/local/Homebrew
+
+Press RETURN/ENTER to continue or any other key to abort:
+==> /usr/bin/sudo /usr/sbin/chown -R Yi:admin /usr/local/Homebrew
+==> Downloading and installing Homebrew...
+remote: Enumerating objects: 1944, done.
+remote: Counting objects: 100% (867/867), done.
+remote: Total 1944 (delta 867), reused 867 (delta 867), pack-reused 1077
+Receiving objects: 100% (1944/1944), 838.62 KiB | 20.45 MiB/s, done.
+Resolving deltas: 100% (1388/1388), completed with 329 local objects.
+From https://github.com/Homebrew/brew
+ * [new branch]          dependabot/bundler/Library/Homebrew/rubocop-1.38.0 -> origin/dependabot/bundler/Library/Homebrew/rubocop-1.38.0
+ * [new branch]          issue-templates         -> origin/issue-templates
+ * [new branch]          less-agressive-core-tap -> origin/less-agressive-core-tap
+   e23d7b636..72f7880e2  master                  -> origin/master
+ * [new tag]             3.6.10                  -> 3.6.10
+ * [new tag]             3.6.5                   -> 3.6.5
+ * [new tag]             3.6.6                   -> 3.6.6
+ * [new tag]             3.6.7                   -> 3.6.7
+ * [new tag]             3.6.8                   -> 3.6.8
+ * [new tag]             3.6.9                   -> 3.6.9
+HEAD is now at 72f7880e2 Merge pull request #14129 from Homebrew/style_more_shell_scripts
+
+Updated 3 taps (microsoft/mssql-release, homebrew/core and homebrew/cask).
+==> Installation successful!
+
+==> Homebrew has enabled anonymous aggregate formulae and cask analytics.
+Read the analytics documentation (and how to opt-out) here:
+  https://docs.brew.sh/Analytics
+No analytics data has been sent yet (nor will any be during this install run).
+
+==> Homebrew is run entirely by unpaid volunteers. Please consider donating:
+  https://github.com/Homebrew/brew#donations
+
+==> Next steps:
+- Run brew help to get started
+- Further documentation:
+    https://docs.brew.sh
+
+Yi~ >> 
+Yi~ >> 
+Yi~ >> 
+Yi~ >> 
+Yi~ >> 
